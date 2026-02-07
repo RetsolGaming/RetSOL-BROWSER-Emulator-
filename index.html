@@ -21,4 +21,48 @@
     <div id="status">RETSOL GBA: STANDBY FOR YELLOW RECHARGED</div>
 
     <div class="menu">
-        <button class="btn
+        <button class="btn-play" onclick="bootGame()">⚡ START YELLOW RECHARGED ⚡</button>
+        <button onclick="gba.pause()">⏸ PAUSE</button>
+        <button onclick="gba.run()">▶ RESUME</button>
+        <button class="btn-hub" onclick="location.href='https://retsolgaming.github.io/RetSOL-Hub/'">🏠 BACK TO HUB</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gbajs/1.0.0/gba.min.js"></script>
+    <script>
+        const gba = new GameBoyAdvance();
+        gba.setCanvas(document.getElementById('screen'));
+
+        function bootGame() {
+            const status = document.getElementById('status');
+            status.innerText = "KICKSTARTING ENGINE...";
+            
+            // Force Audio Unlock for PSG1 Hardware
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            // Using ./ ensures it looks in the same GitHub folder
+            fetch('./yellowrecharged.gba')
+                .then(response => {
+                    if (!response.ok) throw new Error('File not found');
+                    return response.arrayBuffer();
+                })
+                .then(buffer => {
+                    status.innerText = "INJECTING BYTES...";
+                    gba.loadRom(buffer, success => {
+                        if(success) { 
+                            gba.run(); 
+                            status.innerText = "YELLOW RECHARGED ACTIVE";
+                        } else {
+                            status.innerText = "ROM LOAD ERROR";
+                        }
+                    });
+                })
+                .catch(err => {
+                    status.innerText = "FAILED: ENSURE ROM IS IN REPO";
+                });
+        }
+    </script>
+</body>
+</html>
