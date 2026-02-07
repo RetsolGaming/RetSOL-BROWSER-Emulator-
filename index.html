@@ -18,7 +18,7 @@
 <body>
 
     <div id="screen-container"><canvas id="screen" width="240" height="160"></canvas></div>
-    <div id="status">RETSOL GBA: STANDBY FOR YELLOW RECHARGED</div>
+    <div id="status">RETSOL GBA: READY FOR YELLOW RECHARGED</div>
 
     <div class="menu">
         <button class="btn-play" onclick="bootGame()">⚡ START YELLOW RECHARGED ⚡</button>
@@ -36,16 +36,16 @@
             const status = document.getElementById('status');
             status.innerText = "KICKSTARTING ENGINE...";
             
-            // Force Audio Unlock for PSG1 Hardware
+            // Wake up Audio
             const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
+            if (audioCtx.state === 'suspended') { audioCtx.resume(); }
 
-            // Using ./ ensures it looks in the same GitHub folder
-            fetch('./yellowrecharged.gba')
+            // Cache-busting URL to ensure we get the file from the Main branch
+            const romPath = './yellowrecharged.gba?nocache=' + new Date().getTime();
+
+            fetch(romPath)
                 .then(response => {
-                    if (!response.ok) throw new Error('File not found');
+                    if (!response.ok) throw new Error('404');
                     return response.arrayBuffer();
                 })
                 .then(buffer => {
@@ -53,14 +53,14 @@
                     gba.loadRom(buffer, success => {
                         if(success) { 
                             gba.run(); 
-                            status.innerText = "YELLOW RECHARGED ACTIVE";
+                            status.innerText = "SYSTEM ACTIVE";
                         } else {
-                            status.innerText = "ROM LOAD ERROR";
+                            status.innerText = "ROM ERROR";
                         }
                     });
                 })
                 .catch(err => {
-                    status.innerText = "FAILED: ENSURE ROM IS IN REPO";
+                    status.innerText = "FILE NOT FOUND ON MAIN BRANCH";
                 });
         }
     </script>
