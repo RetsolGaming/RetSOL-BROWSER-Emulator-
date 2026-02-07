@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RetSOL GBA v3.1</title>
+    <title>RetSOL GBA v3.2</title>
     <style>
         body { background: #050505; color: #00ffa3; font-family: 'Courier New', monospace; text-align: center; margin: 0; }
-        #screen-container { width: 100vw; height: 60vh; background: black; box-shadow: 0 0 30px #ff00ff; border-bottom: 2px solid #ff00ff; display: flex; align-items: center; justify-content: center; }
+        #screen-container { width: 100vw; height: 60vh; background: black; box-shadow: 0 0 30px #ff00ff; border-bottom: 2px solid #ff00ff; display: flex; align-items: center; justify-content: center; overflow: hidden; }
         canvas { width: 100%; height: auto; image-rendering: pixelated; }
         .menu { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 20px; }
-        button { padding: 18px; border: 2px solid; font-weight: bold; background: rgba(0,0,0,0.6); color: inherit; font-size: 12px; text-transform: uppercase; cursor: pointer; }
+        button { padding: 18px; border: 2px solid; font-weight: bold; background: rgba(0,0,0,0.6); color: inherit; font-size: 12px; text-transform: uppercase; cursor: pointer; position: relative; z-index: 10; }
         .btn-primary { border-color: #00ffa3; grid-column: span 2; box-shadow: 0 0 15px #00ffa3; }
         .btn-secondary { border-color: #ff3e81; box-shadow: 0 0 15px #ff3e81; }
-        .btn-hub { border-color: #00e0ff; color: #00e0ff; grid-column: span 2; margin-top: 10px; }
+        .btn-hub { border-color: #00e0ff; color: #00e0ff; grid-column: span 2; margin-top: 10px; box-shadow: 0 0 15px #00e0ff; }
         #status { font-size: 11px; color: #ff00ff; margin-top: 10px; letter-spacing: 2px; }
     </style>
 </head>
@@ -22,7 +22,7 @@
         <canvas id="screen" width="240" height="160"></canvas>
     </div>
     
-    <div id="status">READY: SELECT .GBA FILE</div>
+    <div id="status">RETSOL GBA: SYSTEM IDLE</div>
 
     <div class="menu">
         <button class="btn-primary" onclick="loadRom()">🎮 LOAD GBA GAME</button>
@@ -33,8 +33,10 @@
 
     <script src="https://cdn.jsdelivr.net/npm/gbajs2@latest/dist/index.js"></script>
     <script>
+        // Set up the emulator brain
         const gba = new GBA();
-        gba.setCanvas(document.getElementById('screen'));
+        const canvas = document.getElementById('screen');
+        gba.setCanvas(canvas);
 
         function loadRom() {
             const input = document.createElement('input');
@@ -43,15 +45,21 @@
             input.onchange = e => {
                 const file = e.target.files[0];
                 const reader = new FileReader();
-                document.getElementById('status').innerText = "LOADING...";
+                document.getElementById('status').innerText = "PROCCESSING ENGINE...";
                 
                 reader.onload = (event) => {
+                    // Force the emulator to reset before loading
+                    if(gba.isRunning) { gba.pause(); }
+                    
                     gba.loadRom(event.target.result, (success) => {
                         if (success) { 
-                            gba.run(); 
-                            document.getElementById('status').innerText = "RUNNING: " + file.name;
+                            // This tiny delay fixes the "Black Screen" hang on mobile/handhelds
+                            setTimeout(() => {
+                                gba.run(); 
+                                document.getElementById('status').innerText = "ACTIVE: " + file.name;
+                            }, 100);
                         } else {
-                            document.getElementById('status').innerText = "ERROR: TRY ANOTHER ROM";
+                            document.getElementById('status').innerText = "ENGINE ERROR: RELOAD ROM";
                         }
                     });
                 };
@@ -63,7 +71,7 @@
         function quickSave() {
             if (gba.isRunning) {
                 localStorage.setItem('retsol_save', JSON.stringify(gba.freeze()));
-                document.getElementById('status').innerText = "SAVED";
+                document.getElementById('status').innerText = "STATE SAVED";
             }
         }
 
@@ -71,7 +79,7 @@
             const saved = localStorage.getItem('retsol_save');
             if (saved) {
                 gba.defrost(JSON.parse(saved));
-                document.getElementById('status').innerText = "LOADED";
+                document.getElementById('status').innerText = "STATE LOADED";
             }
         }
     </script>
