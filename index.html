@@ -3,26 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RetSOL GBA Pure</title>
+    <title>RetSOL GBA v4.5</title>
     <style>
         body { background: #050505; color: #00ffa3; font-family: 'Courier New', monospace; text-align: center; margin: 0; }
-        #screen-container { width: 100vw; height: 60vh; background: black; border-bottom: 2px solid #ff00ff; box-shadow: 0 0 20px #ff00ff; display: flex; align-items: center; justify-content: center; }
+        #screen-container { width: 100vw; height: 60vh; background: #000; border-bottom: 2px solid #ff00ff; box-shadow: 0 0 20px #ff00ff; display: flex; align-items: center; justify-content: center; }
         canvas { width: 100%; height: auto; image-rendering: pixelated; }
         .menu { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 20px; }
-        button { padding: 18px; border: 2px solid; font-weight: bold; background: rgba(0,0,0,0.6); color: inherit; font-size: 11px; text-transform: uppercase; cursor: pointer; }
-        .btn-primary { border-color: #00ffa3; grid-column: span 2; box-shadow: 0 0 15px #00ffa3; }
-        .btn-secondary { border-color: #ff3e81; color: #ff3e81; }
+        button { padding: 18px; border: 2px solid; font-weight: bold; background: rgba(0,0,0,0.8); color: inherit; font-size: 11px; text-transform: uppercase; cursor: pointer; }
+        .btn-load { border-color: #00ffa3; grid-column: span 2; box-shadow: 0 0 15px #00ffa3; color: #00ffa3; }
         .btn-hub { border-color: #00e0ff; color: #00e0ff; grid-column: span 2; margin-top: 10px; }
         #status { font-size: 10px; color: #ff00ff; margin-top: 10px; letter-spacing: 2px; }
+        /* Keep input visible but tiny so the PSG1 doesn't "forget" it exists */
+        #file-input { opacity: 0.01; height: 1px; width: 1px; position: absolute; }
     </style>
 </head>
 <body>
+
     <div id="screen-container"><canvas id="screen" width="240" height="160"></canvas></div>
-    <div id="status">RETSOL GBA: STANDBY</div>
+    <div id="status">RETSOL GBA: READY FOR INJECTION</div>
+
     <div class="menu">
-        <button class="btn-primary" onclick="startEngine()">🎮 LOAD GBA GAME</button>
-        <button class="btn-secondary" onclick="gba.freeze()">💾 QUICK SAVE</button>
-        <button class="btn-secondary" onclick="gba.defrost()">📂 QUICK LOAD</button>
+        <input type="file" id="file-input" accept=".gba">
+        <button class="btn-load" onclick="document.getElementById('file-input').click()">🎮 OPEN GBA FOLDER</button>
+        <button onclick="gba.pause()">⏸ PAUSE</button>
+        <button onclick="gba.run()">▶ RESUME</button>
         <button class="btn-hub" onclick="location.href='https://retsolgaming.github.io/RetSOL-Hub/'">🏠 BACK TO HUB</button>
     </div>
 
@@ -30,27 +34,30 @@
     <script>
         const gba = new GameBoyAdvance();
         gba.setCanvas(document.getElementById('screen'));
-        
-        function startEngine() {
-            // Force Audio Unlock
-            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            audioCtx.resume();
 
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = '.gba';
-            input.onchange = e => {
-                const reader = new FileReader();
-                document.getElementById('status').innerText = "INJECTING ROM...";
-                reader.onload = ev => {
-                    gba.loadRom(ev.target.result, success => {
-                        if(success) { gba.run(); document.getElementById('status').innerText = "SYSTEM ACTIVE"; }
-                    });
-                };
-                reader.readAsArrayBuffer(e.target.files[0]);
+        document.getElementById('file-input').onchange = e => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            document.getElementById('status').innerText = "INJECTING: " + file.name.toUpperCase();
+            
+            reader.onload = ev => {
+                // Audio Context Unlock for Handhelds
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                audioCtx.resume();
+
+                gba.loadRom(ev.target.result, success => {
+                    if(success) { 
+                        gba.run(); 
+                        document.getElementById('status').innerText = "SYSTEM ACTIVE";
+                    } else {
+                        document.getElementById('status').innerText = "LOAD FAILED - CHECK ROM";
+                    }
+                });
             };
-            input.click();
-        }
+            reader.readAsArrayBuffer(file);
+        };
     </script>
 </body>
 </html>
