@@ -5,7 +5,7 @@ RetSOL is a lightweight, web-based Game Boy Advance emulator designed specifical
 
 ---
 
-## ⚡ Hacker Features
+## ⚡ Hacko0r-Man RETRO Features
 * **Synthwave UI:** Neon-soaked Miami Vice aesthetic for that ultimate retro vibe.
 * **SD Card Integration:** No cloud needed. Read your games and store your saves locally.
 * **Auto-Save System:** Never lose progress. The system saves to your SD card every 5 minutes and upon exit.
