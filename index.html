@@ -3,17 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RetSOL GBA v3.0</title>
+    <title>RetSOL GBA v3.1</title>
     <style>
         body { background: #050505; color: #00ffa3; font-family: 'Courier New', monospace; text-align: center; margin: 0; }
-        #screen-container { width: 100vw; max-height: 60vh; background: black; box-shadow: 0 0 30px #ff00ff; border-bottom: 2px solid #ff00ff; }
-        canvas { width: 100%; height: auto; image-rendering: pixelated; display: block; }
+        #screen-container { width: 100vw; height: 60vh; background: black; box-shadow: 0 0 30px #ff00ff; border-bottom: 2px solid #ff00ff; display: flex; align-items: center; justify-content: center; }
+        canvas { width: 100%; height: auto; image-rendering: pixelated; }
         .menu { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 20px; }
         button { padding: 18px; border: 2px solid; font-weight: bold; background: rgba(0,0,0,0.6); color: inherit; font-size: 12px; text-transform: uppercase; cursor: pointer; }
         .btn-primary { border-color: #00ffa3; grid-column: span 2; box-shadow: 0 0 15px #00ffa3; }
         .btn-secondary { border-color: #ff3e81; box-shadow: 0 0 15px #ff3e81; }
-        /* Added Hub Button Style */
-        .btn-hub { border-color: #00e0ff; color: #00e0ff; grid-column: span 2; margin-top: 10px; box-shadow: 0 0 15px #00e0ff; }
+        .btn-hub { border-color: #00e0ff; color: #00e0ff; grid-column: span 2; margin-top: 10px; }
         #status { font-size: 11px; color: #ff00ff; margin-top: 10px; letter-spacing: 2px; }
     </style>
 </head>
@@ -23,25 +22,20 @@
         <canvas id="screen" width="240" height="160"></canvas>
     </div>
     
-    <div id="status">RETSOL V3: SELECT GAME TO BEGIN</div>
+    <div id="status">READY: SELECT .GBA FILE</div>
 
     <div class="menu">
-        <button class="btn-primary" onclick="vibrate(); loadRom()">🎮 LOAD GBA GAME</button>
-        <button class="btn-secondary" onclick="vibrate(); quickSave()">💾 QUICK SAVE</button>
-        <button class="btn-secondary" onclick="vibrate(); quickLoad()">📂 QUICK LOAD</button>
-        <button class="btn-hub" onclick="vibrate(); location.href='https://retsolgaming.github.io/RetSOL-Hub/'">🏠 BACK TO HUB</button>
+        <button class="btn-primary" onclick="loadRom()">🎮 LOAD GBA GAME</button>
+        <button class="btn-secondary" onclick="quickSave()">💾 QUICK SAVE</button>
+        <button class="btn-secondary" onclick="quickLoad()">📂 QUICK LOAD</button>
+        <button class="btn-hub" onclick="location.href='https://retsolgaming.github.io/RetSOL-Hub/'">🏠 BACK TO HUB</button>
     </div>
 
-    <script src="https://unpkg.com/gbajs2@latest/dist/index.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gbajs2@latest/dist/index.js"></script>
     <script>
         const gba = new GBA();
-        const canvas = document.getElementById('screen');
-        const status = document.getElementById('status');
-        gba.setCanvas(canvas);
+        gba.setCanvas(document.getElementById('screen'));
 
-        function vibrate() { if (navigator.vibrate) navigator.vibrate(40); }
-
-        // Works on ALL devices
         function loadRom() {
             const input = document.createElement('input');
             input.type = 'file';
@@ -49,9 +43,16 @@
             input.onchange = e => {
                 const file = e.target.files[0];
                 const reader = new FileReader();
+                document.getElementById('status').innerText = "LOADING...";
+                
                 reader.onload = (event) => {
                     gba.loadRom(event.target.result, (success) => {
-                        if (success) { gba.run(); status.innerText = "RUNNING: " + file.name; }
+                        if (success) { 
+                            gba.run(); 
+                            document.getElementById('status').innerText = "RUNNING: " + file.name;
+                        } else {
+                            document.getElementById('status').innerText = "ERROR: TRY ANOTHER ROM";
+                        }
                     });
                 };
                 reader.readAsArrayBuffer(file);
@@ -59,38 +60,20 @@
             input.click();
         }
 
-        // Saves to the browser memory (No folder needed!)
         function quickSave() {
-            if (!gba.isRunning) return;
-            const state = gba.freeze();
-            localStorage.setItem('retsol_save', JSON.stringify(state));
-            status.innerText = "SAVED TO BROWSER MEMORY";
+            if (gba.isRunning) {
+                localStorage.setItem('retsol_save', JSON.stringify(gba.freeze()));
+                document.getElementById('status').innerText = "SAVED";
+            }
         }
 
-        // Loads from browser memory
         function quickLoad() {
-            const savedData = localStorage.getItem('retsol_save');
-            if (savedData) {
-                const state = JSON.parse(savedData);
-                gba.defrost(state);
-                status.innerText = "LOADED FROM MEMORY";
-            } else {
-                status.innerText = "NO SAVE FOUND";
+            const saved = localStorage.getItem('retsol_save');
+            if (saved) {
+                gba.defrost(JSON.parse(saved));
+                document.getElementById('status').innerText = "LOADED";
             }
         }
-
-        // Gamepad Setup
-        const MAP = { 0: gba.keypad.A, 1: gba.keypad.B, 9: gba.keypad.START, 8: gba.keypad.SELECT, 12: gba.keypad.UP, 13: gba.keypad.DOWN, 14: gba.keypad.LEFT, 15: gba.keypad.RIGHT, 4: gba.keypad.L, 5: gba.keypad.R };
-        function updateGP() {
-            const gp = navigator.getGamepads()[0];
-            if (gp) {
-                for (const [i, k] of Object.entries(MAP)) {
-                    if (gp.buttons[i].pressed) gba.keypad.keydown(k); else gba.keypad.keyup(k);
-                }
-            }
-            requestAnimationFrame(updateGP);
-        }
-        window.addEventListener("gamepadconnected", () => { status.innerText = "CONTROLLER READY"; updateGP(); });
     </script>
 </body>
 </html>
