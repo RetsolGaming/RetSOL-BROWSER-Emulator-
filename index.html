@@ -3,74 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RetSOL GBA Fix</title>
+    <title>RetSOL GBA v3.0</title>
     <style>
         body { background: #050505; color: #00ffa3; font-family: 'Courier New', monospace; text-align: center; margin: 0; }
-        #screen-container { width: 100vw; height: 60vh; background: black; box-shadow: 0 0 30px #00ffa3; border-bottom: 2px solid #00ffa3; }
-        canvas { width: 100%; height: 100%; image-rendering: pixelated; object-fit: contain; }
-        .menu { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 20px; }
-        button { padding: 20px; border: 2px solid; font-weight: bold; background: black; color: inherit; text-transform: uppercase; font-size: 11px; cursor: pointer; }
-        .btn-primary { border-color: #00ffa3; grid-column: span 2; box-shadow: 0 0 10px #00ffa3; }
-        .btn-secondary { border-color: #ff3e81; color: #ff3e81; }
-        .btn-hub { border-color: #00e0ff; color: #00e0ff; grid-column: span 2; margin-top: 10px; }
-        #status { font-size: 10px; color: #ff00ff; margin-top: 10px; text-transform: uppercase; }
-        #file-input { display: none; }
+        #screen-container { width: 100vw; max-height: 60vh; background: black; box-shadow: 0 0 30px #ff00ff; border-bottom: 2px solid #ff00ff; }
+        canvas { width: 100%; height: auto; image-rendering: pixelated; display: block; }
+        .menu { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 20px; }
+        button { padding: 18px; border: 2px solid; font-weight: bold; background: rgba(0,0,0,0.6); color: inherit; font-size: 12px; }
+        .btn-primary { border-color: #00ffa3; grid-column: span 2; box-shadow: 0 0 15px #00ffa3; }
+        .btn-secondary { border-color: #ff3e81; box-shadow: 0 0 15px #ff3e81; }
+        #status { font-size: 11px; color: #ff00ff; margin-top: 10px; letter-spacing: 2px; }
     </style>
 </head>
 <body>
 
-    <div id="screen-container"><canvas id="screen"></canvas></div>
-    <div id="status">RETSOL GBA: SYSTEM READY</div>
+    <div id="screen-container">
+        <canvas id="screen" width="240" height="160"></canvas>
+    </div>
     
-    <input type="file" id="file-input" accept=".gba">
+    <div id="status">RETSOL V3: SELECT GAME TO BEGIN</div>
 
     <div class="menu">
-        <button class="btn-primary" id="load-btn">🎮 SELECT GBA ROM</button>
-        <button class="btn-secondary" id="save-btn">💾 QUICK SAVE</button>
-        <button class="btn-secondary" id="read-btn">📂 QUICK LOAD</button>
-        <button class="btn-hub" onclick="window.location.href='https://retsolgaming.github.io/RetSOL-Hub/'">🏠 BACK TO HUB</button>
+        <button class="btn-primary" onclick="vibrate(); loadRom()">🎮 LOAD GBA GAME</button>
+        <button class="btn-secondary" onclick="vibrate(); quickSave()">💾 QUICK SAVE</button>
+        <button class="btn-secondary" onclick="vibrate(); quickLoad()">📂 QUICK LOAD</button>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/gh/taisel/GameBoy-Advance@master/dist/index.js"></script>
-
+    <script src="https://unpkg.com/gbajs2@latest/dist/index.js"></script>
     <script>
         const gba = new GBA();
-        gba.setCanvas(document.getElementById('screen'));
+        const canvas = document.getElementById('screen');
+        const status = document.getElementById('status');
+        gba.setCanvas(canvas);
 
-        // Direct button listeners (More stable than 'onclick' in HTML)
-        document.getElementById('load-btn').addEventListener('click', () => {
-            document.getElementById('file-input').click();
-        });
+        function vibrate() { if (navigator.vibrate) navigator.vibrate(40); }
 
-        document.getElementById('file-input').onchange = (e) => {
-            const file = e.target.files[0];
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                gba.loadRom(event.target.result, (success) => {
-                    if (success) { 
-                        gba.run(); 
-                        document.getElementById('status').innerText = "RUNNING: " + file.name;
-                    }
-                });
+        // Works on ALL devices
+        function loadRom() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.gba';
+            input.onchange = e => {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    gba.loadRom(event.target.result, (success) => {
+                        if (success) { gba.run(); status.innerText = "RUNNING: " + file.name; }
+                    });
+                };
+                reader.readAsArrayBuffer(file);
             };
-            reader.readAsArrayBuffer(file);
-        };
+            input.click();
+        }
 
-        document.getElementById('save-btn').addEventListener('click', () => {
-            if (gba.isRunning) {
-                const state = gba.freeze();
-                localStorage.setItem('gba_save_data', JSON.stringify(state));
-                document.getElementById('status').innerText = "MEMORY SAVED";
-            }
-        });
+        // Saves to the browser memory (No folder needed!)
+        function quickSave() {
+            if (!gba.isRunning) return;
+            const state = gba.freeze();
+            localStorage.setItem('retsol_save', JSON.stringify(state));
+            status.innerText = "SAVED TO BROWSER MEMORY";
+        }
 
-        document.getElementById('read-btn').addEventListener('click', () => {
-            const data = localStorage.getItem('gba_save_data');
-            if (data) {
-                gba.defrost(JSON.parse(data));
-                document.getElementById('status').innerText = "MEMORY LOADED";
+        // Loads from browser memory
+        function quickLoad() {
+            const savedData = localStorage.getItem('retsol_save');
+            if (savedData) {
+                const state = JSON.parse(savedData);
+                gba.defrost(state);
+                status.innerText = "LOADED FROM MEMORY";
+            } else {
+                status.innerText = "NO SAVE FOUND";
             }
-        });
+        }
+
+        // Gamepad Setup
+        const MAP = { 0: gba.keypad.A, 1: gba.keypad.B, 9: gba.keypad.START, 8: gba.keypad.SELECT, 12: gba.keypad.UP, 13: gba.keypad.DOWN, 14: gba.keypad.LEFT, 15: gba.keypad.RIGHT, 4: gba.keypad.L, 5: gba.keypad.R };
+        function updateGP() {
+            const gp = navigator.getGamepads()[0];
+            if (gp) {
+                for (const [i, k] of Object.entries(MAP)) {
+                    if (gp.buttons[i].pressed) gba.keypad.keydown(k); else gba.keypad.keyup(k);
+                }
+            }
+            requestAnimationFrame(updateGP);
+        }
+        window.addEventListener("gamepadconnected", () => { status.innerText = "CONTROLLER READY"; updateGP(); });
     </script>
 </body>
 </html>
