@@ -1,28 +1,27 @@
-# 🎮 RetSOL Browser Emulator
-**The Ultimate GBA Experience for Play Solana (PSG1)**
+# 🕹️ RetSOL GBA: Yellow Recharged Edition
 
-RetSOL is a lightweight, web-based Game Boy Advance emulator designed specifically for handheld gaming devices. It follows a "Privacy-First" model: **Zero ROMs are hosted here.** Instead, it uses the modern File System Access API to read games and write saves directly to your device's SD card.
+**The Ultimate Cloud-Injected GBA Experience for Play Solana (PSG1).**
 
----
-
-## ⚡ Hacko0r-Man RETRO Features
-* **Synthwave UI:** Neon-soaked Miami Vice aesthetic for that ultimate retro vibe.
-* **SD Card Integration:** No cloud needed. Read your games and store your saves locally.
-* **Auto-Save System:** Never lose progress. The system saves to your SD card every 5 minutes and upon exit.
-* **CRT Mode:** Toggle-able scanlines for that authentic "old-school tube TV" look.
-* **PSG1 Optimized:** Full Gamepad API support for joysticks and physical buttons.
+RetSOL v5.5 is a specialized, web-based Game Boy Advance emulator designed specifically to bypass the strict file-system security of handheld gaming devices. Instead of relying on local file pickers that often "grey out" ROMs, RetSOL v5.5 uses **Direct-Raw Injection** to stream games directly from your GitHub repository into the emulator's engine.
 
 ---
 
-## 🔒 Security & Privacy
-RetSOL operates entirely in your browser's "Sandbox." 
-* **No Data Collection:** Your game files and saves never leave your device.
-* **Local Processing:** All emulation happens on your hardware, not a server.
-* **Open Access:** Use your own legally owned ROMs via your SD card.
+## 🚀 Key Features
+
+* **⚡ Direct-Raw Boot**: Bypasses the PSG1 file picker entirely by fetching `yellowrecharged.gba` directly from the GitHub main branch.
+* **🔊 Audio-Kickstart**: Automatically unlocks the browser's AudioContext to prevent the common "Black Screen" hang found in web emulators.
+* **🎨 Synthwave UI**: Neon-soaked yellow and pink aesthetic tuned specifically for the PSG1's high-contrast display.
+* **🏠 Hub Integration**: Seamless navigation back to the RetSOL Gaming Hub.
 
 ---
 
-## 🛠️ Built With
-* **GBAJS2:** The core emulation engine.
-* **HTML5/JavaScript:** For a zero-install, browser-based experience.
-* **Vibe Coding:** Pure 80s aesthetic.
+## 🛠️ Installation & Setup
+
+To play your legal backup of **Yellow Recharged**, follow these exact steps:
+
+1.  **Repository Alignment**: Ensure your `index.html` and `yellowrecharged.gba` are in the **same folder** on your `main` branch.
+2.  **Raw Link Configuration**: The `index.html` is pre-configured to look for the file at your RetsolGaming repository path.
+3.  **Deployment**: 
+    * Commit both files to the **main** branch.
+    * Wait for the **GitHub Actions** tab to show a green checkmark (usually takes 1-3 minutes).
+4.  **Play**: Open the site on
