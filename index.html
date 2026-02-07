@@ -3,93 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RetSOL GBA v3.3</title>
+    <title>RetSOL GBA v4.0</title>
     <style>
-        body { background: #050505; color: #00ffa3; font-family: 'Courier New', monospace; text-align: center; margin: 0; }
-        #screen-container { width: 100vw; height: 60vh; background: black; box-shadow: 0 0 30px #ff00ff; border-bottom: 2px solid #ff00ff; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-        canvas { width: 100%; height: auto; image-rendering: pixelated; }
-        .menu { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 20px; }
-        button { padding: 18px; border: 2px solid; font-weight: bold; background: rgba(0,0,0,0.6); color: inherit; font-size: 12px; text-transform: uppercase; cursor: pointer; position: relative; z-index: 10; }
-        .btn-primary { border-color: #00ffa3; grid-column: span 2; box-shadow: 0 0 15px #00ffa3; }
-        .btn-secondary { border-color: #ff3e81; box-shadow: 0 0 15px #ff3e81; }
-        .btn-hub { border-color: #00e0ff; color: #00e0ff; grid-column: span 2; margin-top: 10px; box-shadow: 0 0 15px #00e0ff; }
-        #status { font-size: 11px; color: #ff00ff; margin-top: 10px; letter-spacing: 2px; }
+        body { background: #050505; color: #00ffa3; font-family: 'Courier New', monospace; text-align: center; margin: 0; overflow: hidden; }
+        #game-container { width: 100vw; height: 70vh; background: black; border-bottom: 2px solid #00ffa3; box-shadow: 0 0 20px #00ffa3; }
+        .menu { display: grid; grid-template-columns: 1fr; gap: 10px; padding: 15px; }
+        button { padding: 15px; border: 2px solid #00e0ff; color: #00e0ff; background: rgba(0,0,0,0.8); font-weight: bold; text-transform: uppercase; cursor: pointer; }
+        #status { font-size: 10px; color: #ff00ff; padding: 5px; letter-spacing: 1px; }
     </style>
 </head>
 <body>
 
-    <div id="screen-container">
-        <canvas id="screen" width="240" height="160"></canvas>
+    <div id="game-container">
+        <div id="emulator"></div>
     </div>
-    
-    <div id="status">RETSOL GBA: SYSTEM IDLE</div>
+
+    <div id="status">RETSOL GBA v4.0 // ENGINE: EMULATORJS</div>
 
     <div class="menu">
-        <button class="btn-primary" onclick="initAndLoad()">🎮 LOAD GBA GAME</button>
-        <button class="btn-secondary" onclick="quickSave()">💾 QUICK SAVE</button>
-        <button class="btn-secondary" onclick="quickLoad()">📂 QUICK LOAD</button>
-        <button class="btn-hub" onclick="location.href='https://retsolgaming.github.io/RetSOL-Hub/'">🏠 BACK TO HUB</button>
+        <button onclick="location.href='https://retsolgaming.github.io/RetSOL-Hub/'">🏠 RETURN TO HUB</button>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/gbajs2@latest/dist/index.js"></script>
     <script>
-        const gba = new GBA();
-        gba.setCanvas(document.getElementById('screen'));
-
-        // This function handles the "Audio Unlock" requirement
-        function initAndLoad() {
-            // Wake up the audio system (fixes many black screen hangs)
-            if (gba.audio && gba.audio.context && gba.audio.context.state === 'suspended') {
-                gba.audio.context.resume();
-            }
-            loadRom();
-        }
-
-        function loadRom() {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = '.gba';
-            input.onchange = e => {
-                const file = e.target.files[0];
-                const reader = new FileReader();
-                document.getElementById('status').innerText = "BOOTING ENGINE...";
-                
-                reader.onload = (event) => {
-                    // Total system reset before injection
-                    try {
-                        gba.pause();
-                        gba.reset();
-                    } catch(e) {}
-
-                    gba.loadRom(event.target.result, (success) => {
-                        if (success) { 
-                            // Start the game loop
-                            gba.run(); 
-                            document.getElementById('status').innerText = "RUNNING: " + file.name;
-                        } else {
-                            document.getElementById('status').innerText = "FILE READ ERROR";
-                        }
-                    });
-                };
-                reader.readAsArrayBuffer(file);
-            };
-            input.click();
-        }
-
-        function quickSave() {
-            if (gba.isRunning) {
-                localStorage.setItem('retsol_save', JSON.stringify(gba.freeze()));
-                document.getElementById('status').innerText = "STATE SAVED";
-            }
-        }
-
-        function quickLoad() {
-            const saved = localStorage.getItem('retsol_save');
-            if (saved) {
-                gba.defrost(JSON.parse(saved));
-                document.getElementById('status').innerText = "STATE LOADED";
-            }
-        }
+        EJS_player = '#emulator';
+        EJS_core = 'gba'; // High-compatibility GBA core
+        EJS_pathtodata = 'https://cdn.emulatorjs.org/latest/data/';
+        EJS_startOnLoaded = true;
+        
+        // This force-disables the "Processing" hang by skipping the bios splash
+        EJS_settings = {
+            "gba_it_is_stereo": "false" // Matches original hardware mono-focus
+        };
     </script>
+    <script src="https://cdn.emulatorjs.org/latest/data/loader.js"></script>
+
 </body>
 </html>
