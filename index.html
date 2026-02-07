@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RetSOL Browser Emulator</title>
+    <title>RetSOL-BROWSER-GBAEmulator</title>
     <style>
         body { 
             background-color: #050505; 
@@ -24,7 +24,8 @@
             max-height: 60vh;
             background: black;
             overflow: hidden;
-            box-shadow: 0px 0px 20px #ff00ff;
+            box-shadow: 0px 0px 30px #ff00ff;
+            border-bottom: 2px solid #ff00ff;
         }
 
         canvas { 
@@ -41,8 +42,8 @@
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
                         linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
             background-size: 100% 4px, 3px 100%;
-            pointer-events: none; /* Let clicks pass through */
-            display: none; /* Off by default */
+            pointer-events: none; 
+            display: none; 
             z-index: 10;
         }
 
@@ -50,30 +51,41 @@
             display: grid; 
             grid-template-columns: 1fr 1fr; 
             gap: 12px; 
-            padding: 15px; 
+            padding: 20px; 
         }
 
+        /* Cyberpunk Buttons */
         button { 
             padding: 18px; 
             border: 2px solid;
-            border-radius: 4px; 
+            border-radius: 0px; /* Square edges look more retro */
             font-weight: bold; 
             cursor: pointer; 
-            font-size: 13px;
+            font-size: 12px;
             text-transform: uppercase;
-            background: transparent;
-            transition: 0.2s;
+            background: rgba(0, 0, 0, 0.6);
+            transition: 0.1s;
         }
 
-        .btn-link { color: #00ffa3; border-color: #00ffa3; grid-column: span 2; box-shadow: 0 0 10px #00ffa3; }
-        .btn-load { color: #00e0ff; border-color: #00e0ff; grid-column: span 2; box-shadow: 0 0 10px #00e0ff; }
-        .btn-save { color: #ff3e81; border-color: #ff3e81; box-shadow: 0 0 10px #ff3e81; }
-        .btn-crt  { color: #ffff00; border-color: #ffff00; box-shadow: 0 0 10px #ffff00; }
-        .btn-state { color: #bc00ff; border-color: #bc00ff; box-shadow: 0 0 10px #bc00ff; grid-column: span 2;}
+        .btn-link { color: #00ffa3; border-color: #00ffa3; grid-column: span 2; box-shadow: 0 0 15px #00ffa3; }
+        .btn-load { color: #00e0ff; border-color: #00e0ff; grid-column: span 2; box-shadow: 0 0 15px #00e0ff; }
+        .btn-save { color: #ff3e81; border-color: #ff3e81; box-shadow: 0 0 15px #ff3e81; }
+        .btn-crt  { color: #ffff00; border-color: #ffff00; box-shadow: 0 0 15px #ffff00; }
+        .btn-state { color: #bc00ff; border-color: #bc00ff; box-shadow: 0 0 15px #bc00ff; grid-column: span 2;}
 
-        button:active { transform: scale(0.95); background: white; color: black; }
+        button:active { 
+            transform: scale(0.98); 
+            background: #fff; 
+            color: #000; 
+        }
 
-        #status { font-size: 11px; color: #ff00ff; margin-top: 5px; text-shadow: 0 0 5px #ff00ff; }
+        #status { 
+            font-size: 11px; 
+            color: #ff00ff; 
+            margin-top: 10px; 
+            text-shadow: 0 0 8px #ff00ff;
+            letter-spacing: 2px;
+        }
     </style>
 </head>
 <body>
@@ -83,14 +95,14 @@
         <canvas id="screen" width="240" height="160"></canvas>
     </div>
     
-    <div id="status">SYSTEM READY... LINK SD FOLDER</div>
+    <div id="status">RETSOL GBA READY... LINK SD FOLDER</div>
 
     <div class="menu">
-        <button class="btn-link" onclick="selectSavesFolder()">📁 LINK SD SAVES FOLDER</button>
-        <button class="btn-load" onclick="loadRom()">🎮 SELECT GBA GAME</button>
-        <button class="btn-save" onclick="saveToSD()">💾 MANUAL SAVE</button>
-        <button class="btn-crt" onclick="toggleCRT()">📺 CRT SCANLINES</button>
-        <button class="btn-state" onclick="loadRom()">📂 LOAD SAVED GAME (.SAV)</button>
+        <button class="btn-link" onclick="vibrate(); selectSavesFolder()">📁 LINK SD SAVES FOLDER</button>
+        <button class="btn-load" onclick="vibrate(); loadRom()">🎮 SELECT GBA GAME</button>
+        <button class="btn-save" onclick="vibrate(); saveToSD()">💾 MANUAL SAVE</button>
+        <button class="btn-crt" onclick="vibrate(); toggleCRT()">📺 CRT SCANLINES</button>
+        <button class="btn-state" onclick="vibrate(); loadRom()">📂 LOAD .SAV FILE</button>
     </div>
 
     <script src="https://unpkg.com/gbajs2@latest/dist/index.js"></script>
@@ -104,6 +116,11 @@
 
         let savesFolderHandle;
 
+        // Makes the PSG1 buzz on tap
+        function vibrate() {
+            if (navigator.vibrate) navigator.vibrate(40);
+        }
+
         function toggleCRT() {
             crt.style.display = (crt.style.display === 'none' || crt.style.display === '') ? 'block' : 'none';
         }
@@ -111,48 +128,47 @@
         async function selectSavesFolder() {
             try {
                 savesFolderHandle = await window.showDirectoryPicker();
-                status.innerText = "ACCESS GRANTED: SD FOLDER LINKED";
+                status.innerText = "ACCESS GRANTED: SD LINKED";
             } catch (e) {
                 status.innerText = "ERROR: ACCESS DENIED";
             }
         }
 
         async function loadRom() {
-            const [fileHandle] = await window.showOpenFilePicker();
-            const file = await fileHandle.getFile();
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                // If it's a save file, load the state
-                if (file.name.endsWith('.sav')) {
-                    const state = JSON.parse(new TextDecoder().decode(e.target.result));
-                    gba.defrost(state);
-                    status.innerText = "STATE LOADED: " + file.name;
-                } else {
-                    // It's a game ROM
-                    gba.loadRom(e.target.result, (success) => {
-                        if (success) {
-                            gba.run();
-                            status.innerText = "RUNNING: " + file.name;
-                        }
-                    });
-                }
-            };
-            if (file.name.endsWith('.sav')) {
+            try {
+                const [fileHandle] = await window.showOpenFilePicker();
+                const file = await fileHandle.getFile();
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    if (file.name.endsWith('.sav')) {
+                        const state = JSON.parse(new TextDecoder().decode(e.target.result));
+                        gba.defrost(state);
+                        status.innerText = "STATE RESTORED: " + file.name;
+                    } else {
+                        gba.loadRom(e.target.result, (success) => {
+                            if (success) { gba.run(); status.innerText = "RUNNING: " + file.name; }
+                        });
+                    }
+                };
                 reader.readAsArrayBuffer(file);
-            } else {
-                reader.readAsArrayBuffer(file);
+            } catch (e) {
+                status.innerText = "LOAD CANCELLED";
             }
         }
 
         async function saveToSD() {
             if (!savesFolderHandle) return alert("Link SD folder first!");
-            const fileName = `retsol-${Date.now()}.sav`;
-            const fileHandle = await savesFolderHandle.getFileHandle(fileName, { create: true });
-            const writable = await fileHandle.createWritable();
-            const state = gba.freeze();
-            await writable.write(JSON.stringify(state));
-            await writable.close();
-            status.innerText = "SAVED TO SD: " + fileName;
+            try {
+                const fileName = `retsol-${Date.now()}.sav`;
+                const fileHandle = await savesFolderHandle.getFileHandle(fileName, { create: true });
+                const writable = await fileHandle.createWritable();
+                const state = gba.freeze();
+                await writable.write(JSON.stringify(state));
+                await writable.close();
+                status.innerText = "SAVED: " + fileName;
+            } catch (e) {
+                status.innerText = "SAVE FAILED";
+            }
         }
 
         setInterval(() => { if (gba.isRunning && savesFolderHandle) saveToSD(); }, 1000 * 60 * 5);
@@ -171,7 +187,7 @@
             requestAnimationFrame(updateGamepad);
         }
         window.addEventListener("gamepadconnected", () => {
-            status.innerText = "CONTROLLER DETECTED";
+            status.innerText = "CONTROLLER ACTIVE";
             updateGamepad();
         });
     </script>
