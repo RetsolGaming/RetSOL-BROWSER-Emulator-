@@ -18,7 +18,7 @@
 <body>
 
     <div id="screen-container"><canvas id="screen" width="240" height="160"></canvas></div>
-    <div id="status">RETSOL GBA: READY FOR YELLOW RECHARGED</div>
+    <div id="status">RETSOL GBA: READY TO BOOT</div>
 
     <div class="menu">
         <button class="btn-play" onclick="bootGame()">⚡ START YELLOW RECHARGED ⚡</button>
@@ -34,32 +34,32 @@
 
         function bootGame() {
             const status = document.getElementById('status');
-            status.innerText = "LINKING TO GITHUB PAGES...";
+            status.innerText = "LOCALIZING ROM BYTES...";
             
             const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             if (audioCtx.state === 'suspended') { audioCtx.resume(); }
 
-            // Official GitHub Pages URL (This bypasses the Raw Access block)
-            const officialUrl = 'https://retsolgaming.github.io/RetSOL-BROWSER-GBAEmulator/yellowrecharged.gba';
+            // This uses a relative path. GitHub allows this because it's the same website origin.
+            const romPath = './yellowrecharged.gba';
 
-            fetch(officialUrl)
+            fetch(romPath)
                 .then(response => {
-                    if (!response.ok) throw new Error('PAGES_FETCH_FAILED');
+                    if (!response.ok) throw new Error('NOT_FOUND_ON_SERVER');
                     return response.arrayBuffer();
                 })
                 .then(buffer => {
-                    status.innerText = "INJECTING BYTES...";
+                    status.innerText = "INJECTING ENGINE...";
                     gba.loadRom(buffer, success => {
                         if(success) { 
                             gba.run(); 
                             status.innerText = "YELLOW RECHARGED ACTIVE";
                         } else {
-                            status.innerText = "ENGINE ERROR: TRY REBOOTING";
+                            status.innerText = "CRITICAL ENGINE ERROR";
                         }
                     });
                 })
                 .catch(err => {
-                    status.innerText = "CONNECTION FAILED: CHECK DEPLOYMENT";
+                    status.innerText = "ERROR: FILE MISSING FROM DEPLOYMENT";
                     console.error(err);
                 });
         }
