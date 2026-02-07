@@ -12,7 +12,7 @@
         button { padding: 18px; border: 2px solid; font-weight: bold; background: rgba(0,0,0,0.8); color: inherit; font-size: 11px; text-transform: uppercase; cursor: pointer; }
         .btn-play { border-color: #f8d030; grid-column: span 2; box-shadow: 0 0 15px #f8d030; color: #f8d030; font-size: 14px; }
         .btn-hub { border-color: #00e0ff; color: #00e0ff; grid-column: span 2; margin-top: 10px; }
-        #status { font-size: 10px; color: #ff3e81; margin-top: 10px; letter-spacing: 2px; font-weight: bold; }
+        #status { font-size: 10px; color: #ff3e81; margin-top: 10px; letter-spacing: 2px; font-weight: bold; height: 20px; }
     </style>
 </head>
 <body>
@@ -22,8 +22,10 @@
 
     <div class="menu">
         <button class="btn-play" onclick="bootGame()">⚡ START YELLOW RECHARGED ⚡</button>
+        
         <button onclick="gba.pause()">⏸ PAUSE</button>
         <button onclick="gba.run()">▶ RESUME</button>
+        
         <button class="btn-hub" onclick="location.href='https://retsolgaming.github.io/RetSOL-Hub/'">🏠 BACK TO HUB</button>
     </div>
 
@@ -34,18 +36,18 @@
 
         function bootGame() {
             const status = document.getElementById('status');
-            status.innerText = "KICKSTARTING ENGINE...";
+            status.innerText = "FORCING RAW CLOUD FETCH...";
             
-            // Wake up Audio
+            // Unlock Audio Context for PSG1
             const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             if (audioCtx.state === 'suspended') { audioCtx.resume(); }
 
-            // Cache-busting URL to ensure we get the file from the Main branch
-            const romPath = './yellowrecharged.gba?nocache=' + new Date().getTime();
+            // This pulls the RAW file bytes directly from GitHub's storage server
+            const rawUrl = 'https://raw.githubusercontent.com/RetsolGaming/RetSOL-BROWSER-GBAEmulator/main/yellowrecharged.gba';
 
-            fetch(romPath)
+            fetch(rawUrl)
                 .then(response => {
-                    if (!response.ok) throw new Error('404');
+                    if (!response.ok) throw new Error('FETCH_FAILED');
                     return response.arrayBuffer();
                 })
                 .then(buffer => {
@@ -55,12 +57,13 @@
                             gba.run(); 
                             status.innerText = "SYSTEM ACTIVE";
                         } else {
-                            status.innerText = "ROM ERROR";
+                            status.innerText = "ENGINE CRASH: CHECK ROM INTEGRITY";
                         }
                     });
                 })
                 .catch(err => {
-                    status.innerText = "FILE NOT FOUND ON MAIN BRANCH";
+                    status.innerText = "ERROR: GITHUB BLOCKED RAW ACCESS";
+                    console.error(err);
                 });
         }
     </script>
