@@ -22,46 +22,50 @@
 
     <div class="menu">
         <button class="btn-play" onclick="bootGame()">⚡ START YELLOW RECHARGED ⚡</button>
+        
         <button onclick="gba.pause()">⏸ PAUSE</button>
         <button onclick="gba.run()">▶ RESUME</button>
+        
         <button class="btn-hub" onclick="location.href='https://retsolgaming.github.io/RetSOL-Hub/'">🏠 BACK TO HUB</button>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gbajs/1.0.0/gba.min.js"></script>
+    
     <script>
         const gba = new GameBoyAdvance();
         gba.setCanvas(document.getElementById('screen'));
 
         function bootGame() {
             const status = document.getElementById('status');
-            status.innerText = "LOCALIZING ROM BYTES...";
+            status.innerText = "LOCATING ROM ON SERVER...";
             
+            // Wake up Audio Context for PSG1
             const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             if (audioCtx.state === 'suspended') { audioCtx.resume(); }
 
-            // ABSOLUTE URL: This is the exact web address of your file. 
-            // It bypasses the "Relative Path" confusion entirely.
-            const romUrl = 'https://retsolgaming.github.io/RetSOL-BROWSER-GBAEmulator/yellowrecharged.gba';
+            // SUPER-PATH: Automatically calculates the correct folder link
+            const baseUrl = window.location.href.split('?')[0].split('#')[0];
+            const romUrl = baseUrl.substring(0, baseUrl.lastIndexOf('/')) + '/yellowrecharged.gba';
 
             fetch(romUrl)
                 .then(response => {
-                    if (!response.ok) throw new Error('NOT_ON_PAGES_SERVER');
+                    if (!response.ok) throw new Error('NOT_DEPLOYED');
                     return response.arrayBuffer();
                 })
                 .then(buffer => {
-                    status.innerText = "INJECTING ENGINE...";
+                    status.innerText = "INJECTING BYTES...";
                     gba.loadRom(buffer, success => {
                         if(success) { 
                             gba.run(); 
                             status.innerText = "YELLOW RECHARGED ACTIVE";
                         } else {
-                            status.innerText = "CRITICAL ENGINE ERROR";
+                            status.innerText = "ENGINE ERROR: RELOAD PAGE";
                         }
                     });
                 })
                 .catch(err => {
                     status.innerText = "NOT FOUND: CHECK ACTIONS TAB";
-                    console.error(err);
+                    console.error("Path attempted:", romUrl);
                 });
         }
     </script>
