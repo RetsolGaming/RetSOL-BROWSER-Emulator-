@@ -22,10 +22,8 @@
 
     <div class="menu">
         <button class="btn-play" onclick="bootGame()">⚡ START YELLOW RECHARGED ⚡</button>
-        
         <button onclick="gba.pause()">⏸ PAUSE</button>
         <button onclick="gba.run()">▶ RESUME</button>
-        
         <button class="btn-hub" onclick="location.href='https://retsolgaming.github.io/RetSOL-Hub/'">🏠 BACK TO HUB</button>
     </div>
 
@@ -36,18 +34,17 @@
 
         function bootGame() {
             const status = document.getElementById('status');
-            status.innerText = "FORCING RAW CLOUD FETCH...";
+            status.innerText = "LINKING TO GITHUB PAGES...";
             
-            // Unlock Audio Context for PSG1
             const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             if (audioCtx.state === 'suspended') { audioCtx.resume(); }
 
-            // This pulls the RAW file bytes directly from GitHub's storage server
-            const rawUrl = 'https://raw.githubusercontent.com/RetsolGaming/RetSOL-BROWSER-GBAEmulator/main/yellowrecharged.gba';
+            // Official GitHub Pages URL (This bypasses the Raw Access block)
+            const officialUrl = 'https://retsolgaming.github.io/RetSOL-BROWSER-GBAEmulator/yellowrecharged.gba';
 
-            fetch(rawUrl)
+            fetch(officialUrl)
                 .then(response => {
-                    if (!response.ok) throw new Error('FETCH_FAILED');
+                    if (!response.ok) throw new Error('PAGES_FETCH_FAILED');
                     return response.arrayBuffer();
                 })
                 .then(buffer => {
@@ -55,14 +52,14 @@
                     gba.loadRom(buffer, success => {
                         if(success) { 
                             gba.run(); 
-                            status.innerText = "SYSTEM ACTIVE";
+                            status.innerText = "YELLOW RECHARGED ACTIVE";
                         } else {
-                            status.innerText = "ENGINE CRASH: CHECK ROM INTEGRITY";
+                            status.innerText = "ENGINE ERROR: TRY REBOOTING";
                         }
                     });
                 })
                 .catch(err => {
-                    status.innerText = "ERROR: GITHUB BLOCKED RAW ACCESS";
+                    status.innerText = "CONNECTION FAILED: CHECK DEPLOYMENT";
                     console.error(err);
                 });
         }
