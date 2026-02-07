@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RetSOL GBA v3.2</title>
+    <title>RetSOL GBA v3.3</title>
     <style>
         body { background: #050505; color: #00ffa3; font-family: 'Courier New', monospace; text-align: center; margin: 0; }
         #screen-container { width: 100vw; height: 60vh; background: black; box-shadow: 0 0 30px #ff00ff; border-bottom: 2px solid #ff00ff; display: flex; align-items: center; justify-content: center; overflow: hidden; }
@@ -25,7 +25,7 @@
     <div id="status">RETSOL GBA: SYSTEM IDLE</div>
 
     <div class="menu">
-        <button class="btn-primary" onclick="loadRom()">🎮 LOAD GBA GAME</button>
+        <button class="btn-primary" onclick="initAndLoad()">🎮 LOAD GBA GAME</button>
         <button class="btn-secondary" onclick="quickSave()">💾 QUICK SAVE</button>
         <button class="btn-secondary" onclick="quickLoad()">📂 QUICK LOAD</button>
         <button class="btn-hub" onclick="location.href='https://retsolgaming.github.io/RetSOL-Hub/'">🏠 BACK TO HUB</button>
@@ -33,10 +33,17 @@
 
     <script src="https://cdn.jsdelivr.net/npm/gbajs2@latest/dist/index.js"></script>
     <script>
-        // Set up the emulator brain
         const gba = new GBA();
-        const canvas = document.getElementById('screen');
-        gba.setCanvas(canvas);
+        gba.setCanvas(document.getElementById('screen'));
+
+        // This function handles the "Audio Unlock" requirement
+        function initAndLoad() {
+            // Wake up the audio system (fixes many black screen hangs)
+            if (gba.audio && gba.audio.context && gba.audio.context.state === 'suspended') {
+                gba.audio.context.resume();
+            }
+            loadRom();
+        }
 
         function loadRom() {
             const input = document.createElement('input');
@@ -45,21 +52,22 @@
             input.onchange = e => {
                 const file = e.target.files[0];
                 const reader = new FileReader();
-                document.getElementById('status').innerText = "PROCCESSING ENGINE...";
+                document.getElementById('status').innerText = "BOOTING ENGINE...";
                 
                 reader.onload = (event) => {
-                    // Force the emulator to reset before loading
-                    if(gba.isRunning) { gba.pause(); }
-                    
+                    // Total system reset before injection
+                    try {
+                        gba.pause();
+                        gba.reset();
+                    } catch(e) {}
+
                     gba.loadRom(event.target.result, (success) => {
                         if (success) { 
-                            // This tiny delay fixes the "Black Screen" hang on mobile/handhelds
-                            setTimeout(() => {
-                                gba.run(); 
-                                document.getElementById('status').innerText = "ACTIVE: " + file.name;
-                            }, 100);
+                            // Start the game loop
+                            gba.run(); 
+                            document.getElementById('status').innerText = "RUNNING: " + file.name;
                         } else {
-                            document.getElementById('status').innerText = "ENGINE ERROR: RELOAD ROM";
+                            document.getElementById('status').innerText = "FILE READ ERROR";
                         }
                     });
                 };
