@@ -14,13 +14,6 @@ RetSOL is a lightweight, web-based Game Boy Advance emulator designed specifical
 
 ---
 
-## 🚀 Quick Start (For PSG1 Users)
-1.  **Link Folder:** Tap `📁 LINK SD SAVES FOLDER` and select a folder on your SD card. This is where your saves live.
-2.  **Load Game:** Tap `🎮 SELECT GBA GAME` and pick your `.gba` file.
-3.  **Play:** Once the status says `CONTROLLER DETECTED`, you are ready to play!
-
----
-
 ## 🔒 Security & Privacy
 RetSOL operates entirely in your browser's "Sandbox." 
 * **No Data Collection:** Your game files and saves never leave your device.
