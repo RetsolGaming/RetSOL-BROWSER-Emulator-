@@ -18,56 +18,35 @@
 <body>
 
     <div id="screen-container"><canvas id="screen" width="240" height="160"></canvas></div>
-    <div id="status">RETSOL GBA: READY TO BOOT</div>
+    <div id="status">RETSOL GBA: STANDBY</div>
 
     <div class="menu">
         <button class="btn-play" onclick="bootGame()">⚡ START YELLOW RECHARGED ⚡</button>
-        
         <button onclick="gba.pause()">⏸ PAUSE</button>
         <button onclick="gba.run()">▶ RESUME</button>
-        
         <button class="btn-hub" onclick="location.href='https://retsolgaming.github.io/RetSOL-Hub/'">🏠 BACK TO HUB</button>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gbajs/1.0.0/gba.min.js"></script>
-    
     <script>
         const gba = new GameBoyAdvance();
         gba.setCanvas(document.getElementById('screen'));
 
         function bootGame() {
             const status = document.getElementById('status');
-            status.innerText = "LOCATING ROM ON SERVER...";
+            status.innerText = "BYPASSING CACHE...";
             
-            // Wake up Audio Context for PSG1
             const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             if (audioCtx.state === 'suspended') { audioCtx.resume(); }
 
-            // SUPER-PATH: Automatically calculates the correct folder link
-            const baseUrl = window.location.href.split('?')[0].split('#')[0];
-            const romUrl = baseUrl.substring(0, baseUrl.lastIndexOf('/')) + '/yellowrecharged.gba';
+            // The "?t=" part creates a unique URL every time, forcing a fresh download from GitHub
+            const romUrl = './yellowrecharged.gba?t=' + Date.now();
 
             fetch(romUrl)
                 .then(response => {
-                    if (!response.ok) throw new Error('NOT_DEPLOYED');
+                    if (!response.ok) throw new Error('STILL_NOT_FOUND');
                     return response.arrayBuffer();
                 })
                 .then(buffer => {
                     status.innerText = "INJECTING BYTES...";
-                    gba.loadRom(buffer, success => {
-                        if(success) { 
-                            gba.run(); 
-                            status.innerText = "YELLOW RECHARGED ACTIVE";
-                        } else {
-                            status.innerText = "ENGINE ERROR: RELOAD PAGE";
-                        }
-                    });
-                })
-                .catch(err => {
-                    status.innerText = "NOT FOUND: CHECK ACTIONS TAB";
-                    console.error("Path attempted:", romUrl);
-                });
-        }
-    </script>
-</body>
-</html>
+                    gba.loadRom(buffer
