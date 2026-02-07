@@ -3,16 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RetSOL GBA v3.0</title>
+    <title>RetSOL GBA v3.1</title>
     <style>
-        body { background: #050505; color: #00ffa3; font-family: 'Courier New', monospace; text-align: center; margin: 0; }
-        #screen-container { width: 100vw; max-height: 60vh; background: black; box-shadow: 0 0 30px #ff00ff; border-bottom: 2px solid #ff00ff; }
-        canvas { width: 100%; height: auto; image-rendering: pixelated; display: block; }
-        .menu { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 20px; }
-        button { padding: 18px; border: 2px solid; font-weight: bold; background: rgba(0,0,0,0.6); color: inherit; font-size: 12px; }
+        body { 
+            background-color: #050505; 
+            background-image: linear-gradient(to bottom, #050505, #1a0033);
+            color: #00ffa3; 
+            font-family: 'Courier New', monospace; 
+            text-align: center; 
+            margin: 0; padding: 0;
+            overflow-x: hidden; 
+        }
+
+        #screen-container {
+            position: relative;
+            width: 100vw;
+            max-height: 60vh;
+            background: black;
+            box-shadow: 0px 0px 30px #00ffa3;
+            border-bottom: 2px solid #00ffa3;
+        }
+
+        canvas { 
+            width: 100%; 
+            height: auto; 
+            image-rendering: pixelated; 
+            display: block;
+        }
+
+        .menu { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 12px; 
+            padding: 20px; 
+        }
+
+        button { 
+            padding: 18px; 
+            border: 2px solid;
+            border-radius: 0px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            font-size: 12px;
+            text-transform: uppercase;
+            background: rgba(0, 0, 0, 0.6);
+            color: inherit;
+            transition: 0.1s;
+        }
+
         .btn-primary { border-color: #00ffa3; grid-column: span 2; box-shadow: 0 0 15px #00ffa3; }
-        .btn-secondary { border-color: #ff3e81; box-shadow: 0 0 15px #ff3e81; }
-        #status { font-size: 11px; color: #ff00ff; margin-top: 10px; letter-spacing: 2px; }
+        .btn-secondary { border-color: #ff3e81; box-shadow: 0 0 15px #ff3e81; color: #ff3e81; }
+        .btn-hub { border-color: #00e0ff; grid-column: span 2; box-shadow: 0 0 15px #00e0ff; color: #00e0ff; margin-top: 10px; }
+
+        button:active { transform: scale(0.98); background: #fff; color: #000; }
+
+        #status { 
+            font-size: 11px; 
+            color: #ff00ff; 
+            margin-top: 10px; 
+            text-shadow: 0 0 8px #ff00ff;
+            letter-spacing: 2px;
+        }
     </style>
 </head>
 <body>
@@ -21,12 +72,13 @@
         <canvas id="screen" width="240" height="160"></canvas>
     </div>
     
-    <div id="status">RETSOL V3: SELECT GAME TO BEGIN</div>
+    <div id="status">RETSOL GBA CORE READY</div>
 
     <div class="menu">
-        <button class="btn-primary" onclick="vibrate(); loadRom()">🎮 LOAD GBA GAME</button>
+        <button class="btn-primary" onclick="vibrate(); loadRom()">🎮 LOAD GBA ROM</button>
         <button class="btn-secondary" onclick="vibrate(); quickSave()">💾 QUICK SAVE</button>
         <button class="btn-secondary" onclick="vibrate(); quickLoad()">📂 QUICK LOAD</button>
+        <button class="btn-hub" onclick="vibrate(); location.href='https://RetsolGaming.github.io/RetSOL-Hub/'">🏠 BACK TO HUB</button>
     </div>
 
     <script src="https://unpkg.com/gbajs2@latest/dist/index.js"></script>
@@ -38,7 +90,6 @@
 
         function vibrate() { if (navigator.vibrate) navigator.vibrate(40); }
 
-        // Works on ALL devices
         function loadRom() {
             const input = document.createElement('input');
             input.type = 'file';
@@ -48,7 +99,10 @@
                 const reader = new FileReader();
                 reader.onload = (event) => {
                     gba.loadRom(event.target.result, (success) => {
-                        if (success) { gba.run(); status.innerText = "RUNNING: " + file.name; }
+                        if (success) { 
+                            gba.run(); 
+                            status.innerText = "RUNNING: " + file.name; 
+                        }
                     });
                 };
                 reader.readAsArrayBuffer(file);
@@ -56,39 +110,49 @@
             input.click();
         }
 
-        // Saves to the browser memory (No folder needed!)
         function quickSave() {
             if (!gba.isRunning) return;
             const state = gba.freeze();
-            localStorage.setItem('retsol_save', JSON.stringify(state));
+            localStorage.setItem('retsol_gba_save', JSON.stringify(state));
             status.innerText = "SAVED TO BROWSER MEMORY";
+            vibrate();
         }
 
-        // Loads from browser memory
         function quickLoad() {
-            const savedData = localStorage.getItem('retsol_save');
+            const savedData = localStorage.getItem('retsol_gba_save');
             if (savedData) {
                 const state = JSON.parse(savedData);
                 gba.defrost(state);
                 status.innerText = "LOADED FROM MEMORY";
+                vibrate();
             } else {
                 status.innerText = "NO SAVE FOUND";
             }
         }
 
-        // Gamepad Setup
-        const MAP = { 0: gba.keypad.A, 1: gba.keypad.B, 9: gba.keypad.START, 8: gba.keypad.SELECT, 12: gba.keypad.UP, 13: gba.keypad.DOWN, 14: gba.keypad.LEFT, 15: gba.keypad.RIGHT, 4: gba.keypad.L, 5: gba.keypad.R };
+        // Gamepad Mapping for PSG1
+        const MAP = { 
+            0: gba.keypad.A, 1: gba.keypad.B, 
+            9: gba.keypad.START, 8: gba.keypad.SELECT, 
+            12: gba.keypad.UP, 13: gba.keypad.DOWN, 
+            14: gba.keypad.LEFT, 15: gba.keypad.RIGHT, 
+            4: gba.keypad.L, 5: gba.keypad.R 
+        };
+
         function updateGP() {
             const gp = navigator.getGamepads()[0];
             if (gp) {
                 for (const [i, k] of Object.entries(MAP)) {
-                    if (gp.buttons[i].pressed) gba.keypad.keydown(k); else gba.keypad.keyup(k);
+                    if (gp.buttons[i] && gp.buttons[i].pressed) gba.keypad.keydown(k); else gba.keypad.keyup(k);
                 }
             }
             requestAnimationFrame(updateGP);
         }
-        window.addEventListener("gamepadconnected", () => { status.innerText = "CONTROLLER READY"; updateGP(); });
+
+        window.addEventListener("gamepadconnected", () => { 
+            status.innerText = "PSG1 CONTROLLER READY"; 
+            updateGP(); 
+        });
     </script>
 </body>
-</html>
 </html>
