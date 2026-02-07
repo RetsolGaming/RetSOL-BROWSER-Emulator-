@@ -9,9 +9,11 @@
         #screen-container { width: 100vw; max-height: 60vh; background: black; box-shadow: 0 0 30px #ff00ff; border-bottom: 2px solid #ff00ff; }
         canvas { width: 100%; height: auto; image-rendering: pixelated; display: block; }
         .menu { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 20px; }
-        button { padding: 18px; border: 2px solid; font-weight: bold; background: rgba(0,0,0,0.6); color: inherit; font-size: 12px; }
+        button { padding: 18px; border: 2px solid; font-weight: bold; background: rgba(0,0,0,0.6); color: inherit; font-size: 12px; text-transform: uppercase; cursor: pointer; }
         .btn-primary { border-color: #00ffa3; grid-column: span 2; box-shadow: 0 0 15px #00ffa3; }
         .btn-secondary { border-color: #ff3e81; box-shadow: 0 0 15px #ff3e81; }
+        /* Added Hub Button Style */
+        .btn-hub { border-color: #00e0ff; color: #00e0ff; grid-column: span 2; margin-top: 10px; box-shadow: 0 0 15px #00e0ff; }
         #status { font-size: 11px; color: #ff00ff; margin-top: 10px; letter-spacing: 2px; }
     </style>
 </head>
@@ -27,6 +29,7 @@
         <button class="btn-primary" onclick="vibrate(); loadRom()">🎮 LOAD GBA GAME</button>
         <button class="btn-secondary" onclick="vibrate(); quickSave()">💾 QUICK SAVE</button>
         <button class="btn-secondary" onclick="vibrate(); quickLoad()">📂 QUICK LOAD</button>
+        <button class="btn-hub" onclick="vibrate(); location.href='https://retsolgaming.github.io/RetSOL-Hub/'">🏠 BACK TO HUB</button>
     </div>
 
     <script src="https://unpkg.com/gbajs2@latest/dist/index.js"></script>
