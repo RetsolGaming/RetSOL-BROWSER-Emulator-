@@ -39,12 +39,13 @@
             const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             if (audioCtx.state === 'suspended') { audioCtx.resume(); }
 
-            // This uses a relative path. GitHub allows this because it's the same website origin.
-            const romPath = './yellowrecharged.gba';
+            // ABSOLUTE URL: This is the exact web address of your file. 
+            // It bypasses the "Relative Path" confusion entirely.
+            const romUrl = 'https://retsolgaming.github.io/RetSOL-BROWSER-GBAEmulator/yellowrecharged.gba';
 
-            fetch(romPath)
+            fetch(romUrl)
                 .then(response => {
-                    if (!response.ok) throw new Error('NOT_FOUND_ON_SERVER');
+                    if (!response.ok) throw new Error('NOT_ON_PAGES_SERVER');
                     return response.arrayBuffer();
                 })
                 .then(buffer => {
@@ -59,7 +60,7 @@
                     });
                 })
                 .catch(err => {
-                    status.innerText = "ERROR: FILE MISSING FROM DEPLOYMENT";
+                    status.innerText = "NOT FOUND: CHECK ACTIONS TAB";
                     console.error(err);
                 });
         }
