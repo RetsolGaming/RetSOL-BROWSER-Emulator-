@@ -1,4 +1,4 @@
-# 🎮 RetSOL GBA v3.0 - Universal Handheld
+# 🎮 RetSOL GBA v3.0 - BETA
 A high-compatibility, low-latency Game Boy Advance core optimized for mobile browsers and portable gaming handhelds.
 
 ## 🚀 Key Features
