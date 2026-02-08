@@ -3,31 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RetSOL GBA v11.5</title>
+    <title>RetSOL-BROWSER-GBAEmulator</title>
     <style>
-        /* Verbatim v4.5 CSS */
-        body { background: #050505; color: #00ffa3; font-family: 'Courier New', monospace; text-align: center; margin: 0; }
-        #screen-container { position: relative; width: 100vw; height: 60vh; background: #000; border-bottom: 2px solid #ff00ff; box-shadow: 0 0 20px #ff00ff; display: flex; align-items: center; justify-content: center; }
-        canvas { width: 100%; height: auto; image-rendering: pixelated; }
-        
-        /* CRT Overlay - Kept simple so it can't break the screen */
+        body { 
+            background-color: #050505; 
+            background-image: linear-gradient(to bottom, #050505, #1a0033);
+            color: #00ffa3; 
+            font-family: 'Courier New', Courier, monospace; 
+            text-align: center; 
+            margin: 0; 
+            padding: 0;
+            overflow-x: hidden; 
+        }
+
+        /* Screen Container */
+        #screen-container {
+            position: relative;
+            display: inline-block;
+            width: 100vw;
+            max-height: 60vh;
+            background: black;
+            overflow: hidden;
+            box-shadow: 0px 0px 30px #ff00ff;
+            border-bottom: 2px solid #ff00ff;
+        }
+
+        canvas { 
+            width: 100%; 
+            height: auto; 
+            image-rendering: pixelated; 
+            display: block;
+        }
+
+        /* CRT Scanline Overlay */
         #crt-overlay {
-            display: none;
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%);
-            background-size: 100% 4px;
-            pointer-events: none;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 4px, 3px 100%;
+            pointer-events: none; 
+            display: none; 
             z-index: 10;
         }
 
-        .menu { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 20px; }
-        button { padding: 18px; border: 2px solid; font-weight: bold; background: rgba(0,0,0,0.8); color: inherit; font-size: 11px; text-transform: uppercase; cursor: pointer; }
-        .btn-load { border-color: #00ffa3; grid-column: span 2; box-shadow: 0 0 15px #00ffa3; color: #00ffa3; }
-        .btn-hub { border-color: #00e0ff; color: #00e0ff; grid-column: span 2; margin-top: 10px; }
-        .btn-crt { border-color: #ff00ff; color: #ff00ff; }
-        #status { font-size: 10px; color: #ff00ff; margin-top: 10px; letter-spacing: 2px; height: 15px; }
-        #file-input { opacity: 0.01; height: 1px; width: 1px; position: absolute; }
+        .menu { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 12px; 
+            padding: 20px; 
+        }
+
+        /* Cyberpunk Buttons */
+        button { 
+            padding: 18px; 
+            border: 2px solid;
+            border-radius: 0px; /* Square edges look more retro */
+            font-weight: bold; 
+            cursor: pointer; 
+            font-size: 12px;
+            text-transform: uppercase;
+            background: rgba(0, 0, 0, 0.6);
+            transition: 0.1s;
+        }
+
+        .btn-link { color: #00ffa3; border-color: #00ffa3; grid-column: span 2; box-shadow: 0 0 15px #00ffa3; }
+        .btn-load { color: #00e0ff; border-color: #00e0ff; grid-column: span 2; box-shadow: 0 0 15px #00e0ff; }
+        .btn-save { color: #ff3e81; border-color: #ff3e81; box-shadow: 0 0 15px #ff3e81; }
+        .btn-crt  { color: #ffff00; border-color: #ffff00; box-shadow: 0 0 15px #ffff00; }
+        .btn-state { color: #bc00ff; border-color: #bc00ff; box-shadow: 0 0 15px #bc00ff; grid-column: span 2;}
+
+        button:active { 
+            transform: scale(0.98); 
+            background: #fff; 
+            color: #000; 
+        }
+
+        #status { 
+            font-size: 11px; 
+            color: #ff00ff; 
+            margin-top: 10px; 
+            text-shadow: 0 0 8px #ff00ff;
+            letter-spacing: 2px;
+        }
     </style>
 </head>
 <body>
@@ -37,57 +95,101 @@
         <canvas id="screen" width="240" height="160"></canvas>
     </div>
     
-    <div id="status">RETSOL GBA: READY</div>
+    <div id="status">RETSOL GBA READY... LINK SD FOLDER</div>
 
     <div class="menu">
-        <input type="file" id="file-input" accept=".gba">
-        <button class="btn-load" onclick="document.getElementById('file-input').click()">🎮 OPEN GBA FOLDER</button>
-        <button class="btn-crt" onclick="toggleCRT()">📺 CRT: OFF</button>
-        <button onclick="gba.pause()">⏸ PAUSE</button>
-        <button onclick="gba.run()">▶ RESUME</button>
-        <button class="btn-hub" onclick="location.href='https://retsolgaming.github.io/RetSOL-Hub/'">🏠 BACK TO HUB</button>
+        <button class="btn-link" onclick="vibrate(); selectSavesFolder()">📁 LINK SD SAVES FOLDER</button>
+        <button class="btn-load" onclick="vibrate(); loadRom()">🎮 SELECT GBA GAME</button>
+        <button class="btn-save" onclick="vibrate(); saveToSD()">💾 MANUAL SAVE</button>
+        <button class="btn-crt" onclick="vibrate(); toggleCRT()">📺 CRT SCANLINES</button>
+        <button class="btn-state" onclick="vibrate(); loadRom()">📂 LOAD .SAV FILE</button>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gbajs/1.0.0/gba.min.js"></script>
-    
+    <script src="https://unpkg.com/gbajs2@latest/dist/index.js"></script>
+
     <script>
-        const gba = new GameBoyAdvance();
-        gba.setCanvas(document.getElementById('screen'));
+        const gba = new GBA();
+        const canvas = document.getElementById('screen');
+        const status = document.getElementById('status');
+        const crt = document.getElementById('crt-overlay');
+        gba.setCanvas(canvas);
+
+        let savesFolderHandle;
+
+        // Makes the PSG1 buzz on tap
+        function vibrate() {
+            if (navigator.vibrate) navigator.vibrate(40);
+        }
 
         function toggleCRT() {
-            const overlay = document.getElementById('crt-overlay');
-            const btn = event.target;
-            if (overlay.style.display === 'block') {
-                overlay.style.display = 'none';
-                btn.innerText = "📺 CRT: OFF";
-            } else {
-                overlay.style.display = 'block';
-                btn.innerText = "📺 CRT: ON";
+            crt.style.display = (crt.style.display === 'none' || crt.style.display === '') ? 'block' : 'none';
+        }
+
+        async function selectSavesFolder() {
+            try {
+                savesFolderHandle = await window.showDirectoryPicker();
+                status.innerText = "ACCESS GRANTED: SD LINKED";
+            } catch (e) {
+                status.innerText = "ERROR: ACCESS DENIED";
             }
         }
 
-        document.getElementById('file-input').onchange = e => {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            document.getElementById('status').innerText = "INJECTING: " + file.name.toUpperCase();
-            
-            reader.onload = ev => {
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                if (audioCtx.state === 'suspended') { audioCtx.resume(); }
-
-                gba.loadRom(ev.target.result, success => {
-                    if(success) { 
-                        gba.run(); 
-                        document.getElementById('status').innerText = "SYSTEM ACTIVE";
+        async function loadRom() {
+            try {
+                const [fileHandle] = await window.showOpenFilePicker();
+                const file = await fileHandle.getFile();
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    if (file.name.endsWith('.sav')) {
+                        const state = JSON.parse(new TextDecoder().decode(e.target.result));
+                        gba.defrost(state);
+                        status.innerText = "STATE RESTORED: " + file.name;
                     } else {
-                        document.getElementById('status').innerText = "LOAD FAILED";
+                        gba.loadRom(e.target.result, (success) => {
+                            if (success) { gba.run(); status.innerText = "RUNNING: " + file.name; }
+                        });
                     }
-                });
-            };
-            reader.readAsArrayBuffer(file);
-        };
+                };
+                reader.readAsArrayBuffer(file);
+            } catch (e) {
+                status.innerText = "LOAD CANCELLED";
+            }
+        }
+
+        async function saveToSD() {
+            if (!savesFolderHandle) return alert("Link SD folder first!");
+            try {
+                const fileName = `retsol-${Date.now()}.sav`;
+                const fileHandle = await savesFolderHandle.getFileHandle(fileName, { create: true });
+                const writable = await fileHandle.createWritable();
+                const state = gba.freeze();
+                await writable.write(JSON.stringify(state));
+                await writable.close();
+                status.innerText = "SAVED: " + fileName;
+            } catch (e) {
+                status.innerText = "SAVE FAILED";
+            }
+        }
+
+        setInterval(() => { if (gba.isRunning && savesFolderHandle) saveToSD(); }, 1000 * 60 * 5);
+        window.addEventListener('beforeunload', () => { if (gba.isRunning && savesFolderHandle) saveToSD(); });
+
+        const BUTTON_MAP = { 0: gba.keypad.A, 1: gba.keypad.B, 9: gba.keypad.START, 8: gba.keypad.SELECT, 12: gba.keypad.UP, 13: gba.keypad.DOWN, 14: gba.keypad.LEFT, 15: gba.keypad.RIGHT, 4: gba.keypad.L, 5: gba.keypad.R };
+        
+        function updateGamepad() {
+            const gp = navigator.getGamepads()[0];
+            if (gp) {
+                for (const [idx, key] of Object.entries(BUTTON_MAP)) {
+                    if (gp.buttons[idx].pressed) gba.keypad.keydown(key);
+                    else gba.keypad.keyup(key);
+                }
+            }
+            requestAnimationFrame(updateGamepad);
+        }
+        window.addEventListener("gamepadconnected", () => {
+            status.innerText = "CONTROLLER ACTIVE";
+            updateGamepad();
+        });
     </script>
 </body>
 </html>
