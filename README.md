@@ -1,19 +1,25 @@
-# 🎮 RetSOL GBA v12.0 - BETA
+# 🎮 RetSOL GBA v3.0 - Universal Handheld
+A high-compatibility, low-latency Game Boy Advance core optimized for mobile browsers and portable gaming handhelds.
 
-The definitive Game Boy Advance injector for the Play Solana (PSG1). This version uses the **Verbatim V3 Logic** to ensure file picking and button responses work 100% on handheld hardware.
+## 🚀 Key Features
+* **Zero-BIOS Engine**: High-level emulation allows for instant booting without external BIOS files.
+* **Handheld UI**: Touch-ready grid menu designed for 4:3 and 16:9 portable screens.
+* **Persistent States**: Save and Load game progress directly to browser LocalStorage.
+* **Sharp Scaling**: Optimized pixel-rendering to prevent blur on high-density displays.
 
-## ✨ Updates in v12.0
-* **Stable Injection**: Uses the in-memory input trigger to bypass browser security blocks.
-* **CRT Mode**: Integrated scanline overlay for that retro feel.
-* **Low Memory Engine**: Powered by `gbajs2` for improved performance over the original library.
-* **Quick Load Fix**: Re-mapped to provide instant file-access mirroring the main load button.
-
-## 🕹️ Controls
-1. **Load Game**: Click the Primary Green button to pick your `.gba` file.
-2. **CRT Toggle**: Use the Pink button to turn scanlines On/Off.
-3. **Save/Load**: Save your state directly to your browser's local storage (no file download needed).
-4. **Controller**: Automatically detects PSG1 physical buttons once a game is running.
+## 🕹️ Setup
+1. **Launch**: Open this page on your handheld's browser.
+2. **Inject**: Tap `🎮 LOAD GBA GAME` to pick a `.gba` file from your device.
+3. **Save/Load**: Use the `💾 QUICK SAVE` button to store your current frame. Use `📂 QUICK LOAD` to resume instantly.
 
 ---
-**Developed for the RetSOL Gaming Hub.**
+
+## 🛠️ Technical Overview
+| Spec | Detail |
+| :--- | :--- |
+| **Core** | gbajs2 (Stable) |
+| **Output** | WebGL Canvas |
+| **Saves** | LocalStorage (JSON Encoded) |
+| **Controls** | Web Gamepad API |
+
 [Back to Hub](https://retsolgaming.github.io/RetSOL-Hub/)
