@@ -3,30 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RetSOL GBA v3.0</title>
+    <title>RetSOL GBA v12.0</title>
     <style>
-        body { background: #050505; color: #00ffa3; font-family: 'Courier New', monospace; text-align: center; margin: 0; }
-        #screen-container { width: 100vw; max-height: 60vh; background: black; box-shadow: 0 0 30px #ff00ff; border-bottom: 2px solid #ff00ff; }
-        canvas { width: 100%; height: auto; image-rendering: pixelated; display: block; }
+        body { background: #050505; color: #00ffa3; font-family: 'Courier New', monospace; text-align: center; margin: 0; overflow-x: hidden; }
+        #screen-container { position: relative; width: 100vw; max-height: 60vh; background: black; box-shadow: 0 0 30px #ff00ff; border-bottom: 2px solid #ff00ff; }
+        canvas { width: 100%; height: auto; image-rendering: pixelated; display: block; z-index: 1; }
+        
+        /* CRT SCANLINE OVERLAY */
+        #crt-overlay {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.2) 50%);
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 10;
+        }
+
         .menu { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 20px; }
-        button { padding: 18px; border: 2px solid; font-weight: bold; background: rgba(0,0,0,0.6); color: inherit; font-size: 12px; }
+        button { padding: 18px; border: 2px solid; font-weight: bold; background: rgba(0,0,0,0.6); color: inherit; font-size: 12px; cursor: pointer; text-transform: uppercase; }
         .btn-primary { border-color: #00ffa3; grid-column: span 2; box-shadow: 0 0 15px #00ffa3; }
         .btn-secondary { border-color: #ff3e81; box-shadow: 0 0 15px #ff3e81; }
-        #status { font-size: 11px; color: #ff00ff; margin-top: 10px; letter-spacing: 2px; }
+        .btn-crt { border-color: #ff00ff; grid-column: span 2; box-shadow: 0 0 10px #ff00ff; }
+        #status { font-size: 11px; color: #ff00ff; margin-top: 10px; letter-spacing: 2px; height: 15px; }
     </style>
 </head>
 <body>
 
     <div id="screen-container">
+        <div id="crt-overlay"></div>
         <canvas id="screen" width="240" height="160"></canvas>
     </div>
     
-    <div id="status">RETSOL V3: SELECT GAME TO BEGIN</div>
+    <div id="status">RETSOL V12: SELECT GAME</div>
 
     <div class="menu">
         <button class="btn-primary" onclick="vibrate(); loadRom()">🎮 LOAD GBA GAME</button>
+        <button class="btn-crt" id="crt-btn" onclick="vibrate(); toggleCRT()">📺 CRT: OFF</button>
         <button class="btn-secondary" onclick="vibrate(); quickSave()">💾 QUICK SAVE</button>
-        <button class="btn-secondary" onclick="vibrate(); quickLoad()">📂 QUICK LOAD</button>
+        <button class="btn-secondary" onclick="vibrate(); loadRom()">📂 QUICK LOAD</button>
+        <button class="btn-primary" style="border-color: #00e0ff; box-shadow: 0 0 10px #00e0ff; margin-top: 10px;" onclick="location.href='https://retsolgaming.github.io/RetSOL-Hub/'">🏠 BACK TO HUB</button>
     </div>
 
     <script src="https://unpkg.com/gbajs2@latest/dist/index.js"></script>
@@ -38,7 +54,7 @@
 
         function vibrate() { if (navigator.vibrate) navigator.vibrate(40); }
 
-        // Works on ALL devices
+        // Verbatim loadRom Logic (the only one that works for you)
         function loadRom() {
             const input = document.createElement('input');
             input.type = 'file';
@@ -46,9 +62,20 @@
             input.onchange = e => {
                 const file = e.target.files[0];
                 const reader = new FileReader();
+                status.innerText = "INJECTING: " + file.name.toUpperCase();
+                
                 reader.onload = (event) => {
+                    // Audio Wakeup
+                    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    if (audioCtx.state === 'suspended') { audioCtx.resume(); }
+
                     gba.loadRom(event.target.result, (success) => {
-                        if (success) { gba.run(); status.innerText = "RUNNING: " + file.name; }
+                        if (success) { 
+                            gba.run(); 
+                            status.innerText = "RUNNING: " + file.name; 
+                        } else {
+                            status.innerText = "LOAD FAILED";
+                        }
                     });
                 };
                 reader.readAsArrayBuffer(file);
@@ -56,27 +83,22 @@
             input.click();
         }
 
-        // Saves to the browser memory (No folder needed!)
+        // CRT Toggle
+        let crtOn = false;
+        function toggleCRT() {
+            crtOn = !crtOn;
+            document.getElementById('crt-overlay').style.display = crtOn ? 'block' : 'none';
+            document.getElementById('crt-btn').innerText = crtOn ? "📺 CRT: ON" : "📺 CRT: OFF";
+        }
+
         function quickSave() {
             if (!gba.isRunning) return;
             const state = gba.freeze();
             localStorage.setItem('retsol_save', JSON.stringify(state));
-            status.innerText = "SAVED TO BROWSER MEMORY";
+            status.innerText = "SAVED TO BROWSER";
         }
 
-        // Loads from browser memory
-        function quickLoad() {
-            const savedData = localStorage.getItem('retsol_save');
-            if (savedData) {
-                const state = JSON.parse(savedData);
-                gba.defrost(state);
-                status.innerText = "LOADED FROM MEMORY";
-            } else {
-                status.innerText = "NO SAVE FOUND";
-            }
-        }
-
-        // Gamepad Setup
+        // Gamepad Setup (Verbatim from V3.0)
         const MAP = { 0: gba.keypad.A, 1: gba.keypad.B, 9: gba.keypad.START, 8: gba.keypad.SELECT, 12: gba.keypad.UP, 13: gba.keypad.DOWN, 14: gba.keypad.LEFT, 15: gba.keypad.RIGHT, 4: gba.keypad.L, 5: gba.keypad.R };
         function updateGP() {
             const gp = navigator.getGamepads()[0];
