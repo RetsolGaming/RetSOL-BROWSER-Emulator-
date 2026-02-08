@@ -1,35 +1,19 @@
-# 🎮 RetSOL GBA v10.0 - Lite Engine
+# 🎮 RetSOL GBA v12.0 - BETA
 
-Welcome to the **RetSOL Lite** Game Boy Advance emulator. This version is stripped of all "Cloud Lag" and heavy network requests to provide the smoothest possible experience on handheld browsers like the **PSG1**.
+The definitive Game Boy Advance injector for the Play Solana (PSG1). This version uses the **Verbatim V3 Logic** to ensure file picking and button responses work 100% on handheld hardware.
 
-## 🚀 Why this version?
-* **Zero-Network Latency**: No more waiting for GitHub to "publish" your files.
-* **Ultra-Low RAM**: Uses a specialized WASM-based engine (IodineGBA) for high performance.
-* **CRT Scanlines**: Real-time visual filter for that authentic retro glow.
-* **Privacy**: Your games are loaded locally; nothing is uploaded to a server.
+## ✨ Updates in v12.0
+* **Stable Injection**: Uses the in-memory input trigger to bypass browser security blocks.
+* **CRT Mode**: Integrated scanline overlay for that retro feel.
+* **Low Memory Engine**: Powered by `gbajs2` for improved performance over the original library.
+* **Quick Load Fix**: Re-mapped to provide instant file-access mirroring the main load button.
 
----
-
-## 🕹️ How to Play
-1.  **Launch**: Open this page in your PSG1 browser.
-2.  **Select Game**: Click the `🎮 OPEN GBA FOLDER` button.
-3.  **Inject**: Choose any `.gba` file from your device's internal storage or SD card.
-4.  **Audio**: If the game doesn't make sound immediately, tap the screen once to "Unlock" the browser's audio engine.
-
-## 📺 Features & Controls
-* **CRT Toggle**: Tap the `📺 CRT` button to turn scanlines on or off. This uses zero extra CPU power.
-* **Pause/Resume**: Use the physical buttons or on-screen menu to halt the engine.
-* **Universal Compatibility**: Works on any device that supports a modern browser.
+## 🕹️ Controls
+1. **Load Game**: Click the Primary Green button to pick your `.gba` file.
+2. **CRT Toggle**: Use the Pink button to turn scanlines On/Off.
+3. **Save/Load**: Save your state directly to your browser's local storage (no file download needed).
+4. **Controller**: Automatically detects PSG1 physical buttons once a game is running.
 
 ---
-
-## 🛠️ Technical Specs
-| Feature | Implementation |
-| :--- | :--- |
-| **Engine** | IodineGBA (WASM-Lite) |
-| **Rendering** | Pixel-Perfect Canvas |
-| **Memory** | <128MB RAM footprint |
-| **Audio** | WebAudio API (Synchronous) |
-
 **Developed for the RetSOL Gaming Hub.**
 [Back to Hub](https://retsolgaming.github.io/RetSOL-Hub/)
