@@ -1,57 +1,102 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RetSOL GBA Lite</title>
+    <title>RetSOL GBA v10.0 - Lite</title>
     <style>
-        body { background: #000; color: #fff; text-align: center; margin: 0; font-family: monospace; }
-        #gfx { width: 100vw; height: auto; image-rendering: pixelated; }
-        .menu { padding: 10px; }
-        #status { color: #f8d030; font-size: 10px; margin-bottom: 10px; }
-        button { background: #222; color: #f8d030; border: 1px solid #f8d030; padding: 15px; width: 90%; font-weight: bold; }
+        body { background: #050505; color: #00ffa3; font-family: 'Courier New', monospace; text-align: center; margin: 0; overflow: hidden; }
+        #screen-container { 
+            position: relative;
+            width: 100vw; 
+            height: 60vh; 
+            background: #000; 
+            border-bottom: 2px solid #ff00ff; 
+            box-shadow: 0 0 20px #ff00ff; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+        }
+        canvas { width: 100%; height: auto; image-rendering: pixelated; z-index: 1; }
+        
+        /* CRT SCANLINE OVERLAY */
+        #crt-overlay {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 4px, 3px 100%;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .menu { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 20px; }
+        button { padding: 18px; border: 2px solid; font-weight: bold; background: rgba(0,0,0,0.8); color: inherit; font-size: 11px; text-transform: uppercase; cursor: pointer; }
+        .btn-load { border-color: #00ffa3; grid-column: span 2; box-shadow: 0 0 15px #00ffa3; color: #00ffa3; }
+        .btn-hub { border-color: #00e0ff; color: #00e0ff; grid-column: span 2; margin-top: 10px; }
+        .btn-crt { border-color: #ff00ff; color: #ff00ff; }
+        #status { font-size: 10px; color: #ff00ff; margin-top: 10px; letter-spacing: 2px; }
+        #file-input { display: none; }
     </style>
 </head>
 <body>
 
-    <canvas id="gfx" width="240" height="160"></canvas>
-    <div id="status">RETSOL LITE ENGINE v9.0</div>
+    <div id="screen-container">
+        <div id="crt-overlay"></div>
+        <canvas id="screen" width="240" height="160"></canvas>
+    </div>
+    <div id="status">RETSOL LITE: STANDBY</div>
 
     <div class="menu">
-        <button onclick="start()">⚡ LOAD YELLOW RECHARGED ⚡</button>
+        <input type="file" id="file-input" accept=".gba">
+        <button class="btn-load" onclick="document.getElementById('file-input').click()">🎮 OPEN GBA FOLDER</button>
+        <button class="btn-crt" onclick="toggleCRT()">📺 CRT: OFF</button>
+        <button onclick="gba.pause()">⏸ PAUSE</button>
+        <button class="btn-hub" onclick="location.href='https://retsolgaming.github.io/RetSOL-Hub/'">🏠 BACK TO HUB</button>
     </div>
 
     <script src="https://taisel.github.io/IodineGBA/IodineGBA/core/Cartridge.js"></script>
     <script src="https://taisel.github.io/IodineGBA/IodineGBA/core/IodineGBA.js"></script>
 
     <script>
-        var gba = new IodineGBA();
-        
-        // Optimize for PSG1: Lower Audio buffer to save RAM
-        gba.setAudioBufferSize(2048);
+        // Initialize Iodine Engine (Fastest WASM-based for low RAM)
+        const gba = new IodineGBA();
+        const canvas = document.getElementById('screen');
+        gba.setCanvas(canvas);
+        gba.setAudioBufferSize(1024); // Minimal audio buffer to prevent freezes
 
-        function start() {
-            const status = document.getElementById('status');
-            status.innerText = "FETCHING BYTES...";
-
-            // Direct fetch from your repo
-            fetch('./yellowrecharged.gba')
-                .then(res => res.arrayBuffer())
-                .then(buffer => {
-                    status.innerText = "BOOTING ENGINE...";
-                    
-                    // Direct buffer injection
-                    const rom = new Uint8Array(buffer);
-                    gba.attachCartridge(rom);
-                    gba.play();
-                    
-                    status.innerText = "SYSTEM ACTIVE";
-                })
-                .catch(err => {
-                    status.innerText = "MEMORY ERROR - REFRESH";
-                    console.error(err);
-                });
+        // CRT Toggle Logic
+        let crtOn = false;
+        function toggleCRT() {
+            crtOn = !crtOn;
+            document.getElementById('crt-overlay').style.display = crtOn ? 'block' : 'none';
+            event.target.innerText = crtOn ? "📺 CRT: ON" : "📺 CRT: OFF";
         }
+
+        document.getElementById('file-input').onchange = e => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            document.getElementById('status').innerText = "INJECTING: " + file.name.toUpperCase();
+            
+            reader.onload = ev => {
+                // Unlock Audio for PSG1
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                audioCtx.resume();
+
+                try {
+                    const romData = new Uint8Array(ev.target.result);
+                    gba.attachCartridge(romData);
+                    gba.play();
+                    document.getElementById('status').innerText = "SYSTEM ACTIVE";
+                } catch (err) {
+                    document.getElementById('status').innerText = "MEMORY CRASH - TRY SMALLER ROM";
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        };
     </script>
 </body>
 </html>
