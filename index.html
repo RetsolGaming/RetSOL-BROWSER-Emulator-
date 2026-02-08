@@ -1,52 +1,57 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RetSOL GBA - Yellow Recharged</title>
+    <title>RetSOL GBA Lite</title>
     <style>
-        body { background: #050505; color: #f8d030; font-family: 'Courier New', monospace; text-align: center; margin: 0; overflow: hidden; }
-        #screen-container { width: 100vw; height: 60vh; background: #000; border-bottom: 2px solid #f8d030; box-shadow: 0 0 25px #f8d030; display: flex; align-items: center; justify-content: center; }
-        canvas { width: 100%; height: auto; image-rendering: pixelated; }
-        .menu { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 20px; }
-        button { padding: 18px; border: 2px solid; font-weight: bold; background: rgba(0,0,0,0.8); color: inherit; font-size: 11px; text-transform: uppercase; cursor: pointer; }
-        .btn-play { border-color: #f8d030; grid-column: span 2; box-shadow: 0 0 15px #f8d030; color: #f8d030; font-size: 14px; }
-        .btn-hub { border-color: #00e0ff; color: #00e0ff; grid-column: span 2; margin-top: 10px; }
-        #status { font-size: 10px; color: #ff3e81; margin-top: 10px; letter-spacing: 2px; font-weight: bold; height: 20px; }
+        body { background: #000; color: #fff; text-align: center; margin: 0; font-family: monospace; }
+        #gfx { width: 100vw; height: auto; image-rendering: pixelated; }
+        .menu { padding: 10px; }
+        #status { color: #f8d030; font-size: 10px; margin-bottom: 10px; }
+        button { background: #222; color: #f8d030; border: 1px solid #f8d030; padding: 15px; width: 90%; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div id="screen-container"><canvas id="screen" width="240" height="160"></canvas></div>
-    <div id="status">RETSOL GBA: STANDBY</div>
+    <canvas id="gfx" width="240" height="160"></canvas>
+    <div id="status">RETSOL LITE ENGINE v9.0</div>
 
     <div class="menu">
-        <button class="btn-play" onclick="bootGame()">⚡ START YELLOW RECHARGED ⚡</button>
-        <button onclick="gba.pause()">⏸ PAUSE</button>
-        <button onclick="gba.run()">▶ RESUME</button>
-        <button class="btn-hub" onclick="location.href='https://retsolgaming.github.io/RetSOL-Hub/'">🏠 BACK TO HUB</button>
+        <button onclick="start()">⚡ LOAD YELLOW RECHARGED ⚡</button>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gbajs/1.0.0/gba.min.js"></script>
+    <script src="https://taisel.github.io/IodineGBA/IodineGBA/core/Cartridge.js"></script>
+    <script src="https://taisel.github.io/IodineGBA/IodineGBA/core/IodineGBA.js"></script>
+
     <script>
-        const gba = new GameBoyAdvance();
-        gba.setCanvas(document.getElementById('screen'));
+        var gba = new IodineGBA();
+        
+        // Optimize for PSG1: Lower Audio buffer to save RAM
+        gba.setAudioBufferSize(2048);
 
-        function bootGame() {
+        function start() {
             const status = document.getElementById('status');
-            status.innerText = "BYPASSING CACHE...";
-            
-            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (audioCtx.state === 'suspended') { audioCtx.resume(); }
+            status.innerText = "FETCHING BYTES...";
 
-            // The "?t=" part creates a unique URL every time, forcing a fresh download from GitHub
-            const romUrl = './yellowrecharged.gba?t=' + Date.now();
-
-            fetch(romUrl)
-                .then(response => {
-                    if (!response.ok) throw new Error('STILL_NOT_FOUND');
-                    return response.arrayBuffer();
-                })
+            // Direct fetch from your repo
+            fetch('./yellowrecharged.gba')
+                .then(res => res.arrayBuffer())
                 .then(buffer => {
-                    status.innerText = "INJECTING BYTES...";
-                    gba.loadRom(buffer
+                    status.innerText = "BOOTING ENGINE...";
+                    
+                    // Direct buffer injection
+                    const rom = new Uint8Array(buffer);
+                    gba.attachCartridge(rom);
+                    gba.play();
+                    
+                    status.innerText = "SYSTEM ACTIVE";
+                })
+                .catch(err => {
+                    status.innerText = "MEMORY ERROR - REFRESH";
+                    console.error(err);
+                });
+        }
+    </script>
+</body>
+</html>
