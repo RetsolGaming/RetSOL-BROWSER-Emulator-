@@ -1,27 +1,35 @@
-# 🕹️ RetSOL GBA: Yellow Recharged Edition
+# 🎮 RetSOL GBA v10.0 - Lite Engine
 
-**The Ultimate Cloud-Injected GBA Experience for Play Solana (PSG1).**
+Welcome to the **RetSOL Lite** Game Boy Advance emulator. This version is stripped of all "Cloud Lag" and heavy network requests to provide the smoothest possible experience on handheld browsers like the **PSG1**.
 
-RetSOL v5.5 is a specialized, web-based Game Boy Advance emulator designed specifically to bypass the strict file-system security of handheld gaming devices. Instead of relying on local file pickers that often "grey out" ROMs, RetSOL v5.5 uses **Direct-Raw Injection** to stream games directly from your GitHub repository into the emulator's engine.
-
----
-
-## 🚀 Key Features
-
-* **⚡ Direct-Raw Boot**: Bypasses the PSG1 file picker entirely by fetching `yellowrecharged.gba` directly from the GitHub main branch.
-* **🔊 Audio-Kickstart**: Automatically unlocks the browser's AudioContext to prevent the common "Black Screen" hang found in web emulators.
-* **🎨 Synthwave UI**: Neon-soaked yellow and pink aesthetic tuned specifically for the PSG1's high-contrast display.
-* **🏠 Hub Integration**: Seamless navigation back to the RetSOL Gaming Hub.
+## 🚀 Why this version?
+* **Zero-Network Latency**: No more waiting for GitHub to "publish" your files.
+* **Ultra-Low RAM**: Uses a specialized WASM-based engine (IodineGBA) for high performance.
+* **CRT Scanlines**: Real-time visual filter for that authentic retro glow.
+* **Privacy**: Your games are loaded locally; nothing is uploaded to a server.
 
 ---
 
-## 🛠️ Installation & Setup
+## 🕹️ How to Play
+1.  **Launch**: Open this page in your PSG1 browser.
+2.  **Select Game**: Click the `🎮 OPEN GBA FOLDER` button.
+3.  **Inject**: Choose any `.gba` file from your device's internal storage or SD card.
+4.  **Audio**: If the game doesn't make sound immediately, tap the screen once to "Unlock" the browser's audio engine.
 
-To play your legal backup of **Yellow Recharged**, follow these exact steps:
+## 📺 Features & Controls
+* **CRT Toggle**: Tap the `📺 CRT` button to turn scanlines on or off. This uses zero extra CPU power.
+* **Pause/Resume**: Use the physical buttons or on-screen menu to halt the engine.
+* **Universal Compatibility**: Works on any device that supports a modern browser.
 
-1.  **Repository Alignment**: Ensure your `index.html` and `yellowrecharged.gba` are in the **same folder** on your `main` branch.
-2.  **Raw Link Configuration**: The `index.html` is pre-configured to look for the file at your RetsolGaming repository path.
-3.  **Deployment**: 
-    * Commit both files to the **main** branch.
-    * Wait for the **GitHub Actions** tab to show a green checkmark (usually takes 1-3 minutes).
-4.  **Play**: Open the site on
+---
+
+## 🛠️ Technical Specs
+| Feature | Implementation |
+| :--- | :--- |
+| **Engine** | IodineGBA (WASM-Lite) |
+| **Rendering** | Pixel-Perfect Canvas |
+| **Memory** | <128MB RAM footprint |
+| **Audio** | WebAudio API (Synchronous) |
+
+**Developed for the RetSOL Gaming Hub.**
+[Back to Hub](https://retsolgaming.github.io/RetSOL-Hub/)
